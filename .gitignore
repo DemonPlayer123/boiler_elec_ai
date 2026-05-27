@@ -1,0 +1,17 @@
+.env
+.history
+.venv/
+__pycache__/
+*.pyc
+
+data/cache/
+data/output/runs/*/api_*.json
+data/output/runs/*/critic/
+data/output/runs/*/candidate_prices_openai.json
+data/output/runs/*/candidate_reviews_openai.json
+data/output/runs/*/normative_review_openai.json
+
+models/
+
+frontend/.next/
+frontend/node_modules/

@@ -1,0 +1,15 @@
+pandas
+openpyxl
+pydantic
+pdfplumber
+pymupdf
+rapidfuzz
+python-dotenv
+pyyaml
+qdrant-client
+sentence-transformers
+fastapi
+uvicorn
+python-multipart
+openai
+bs4
