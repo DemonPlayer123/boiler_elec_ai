@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Boiler Elec AI</title>
+  <link rel="stylesheet" href="/static/styles.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand"><div class="brand-mark">BE</div><div><strong>Boiler Elec AI</strong><span>Инженерный мастер проекта</span></div></div>
+    <div class="project-control" id="projectControl">
+      <label>Проект</label>
+      <input id="projectId" value="25-05" autocomplete="off" list="projectsList" />
+      <datalist id="projectsList"></datalist>
+      <button id="openProjectButton" class="icon-button" title="Открыть проект">↻</button>
+      <button id="newProjectButton" class="icon-button" title="Создать новый проект">＋</button>
+    </div>
+    <div class="topbar-status"><span id="projectStateBadge" class="state-badge">Не открыт</span><span id="pipelineMode"></span></div>
+    <div class="topbar-actions">
+      <button id="historyButton" class="ghost-button">Журнал диалога</button>
+      <button id="shareButton" class="primary-button compact">Поделиться</button>
+    </div>
+  </header>
+
+  <div id="errorBox" class="error-box hidden"></div>
+
+  <main id="wizardView" class="view wizard-view">
+    <section class="wizard-shell">
+      <div class="assistant-column">
+        <div class="assistant-heading">
+          <p class="eyebrow">Новый расчёт электроснабжения</p>
+          <h1>Загрузим документы и уточним недостающие данные</h1>
+          <p>Бот проведёт по схемам, паспортам, HITL-вопросам и запустит полный пайплайн.</p>
+        </div>
+        <div class="progress-summary">
+          <div class="progress-track"><span id="progressBar"></span></div>
+          <div><strong id="stageText">Создайте или откройте проект.</strong><span id="progressHint"></span></div>
+        </div>
+        <div class="chat-log" id="chatLog" aria-live="polite"></div>
+        <div class="chat-action" id="chatAction"></div>
+        <form class="chat-composer" id="chatForm">
+          <input id="chatInput" placeholder="Спросить: что делать дальше, статус, какие файлы загружены" autocomplete="off" />
+          <button class="send-button" type="submit">➤</button>
+        </form>
+      </div>
+
+      <aside class="checklist-column">
+        <div class="checklist-card">
+          <p class="eyebrow">Комплект проекта</p>
+          <h2>Что потребуется</h2>
+          <div id="inputChecklist" class="input-checklist"></div>
+          <button id="sourceFilesButton" class="secondary-button wide">Управление исходными файлами</button>
+        </div>
+        <div class="checklist-card muted-card">
+          <h3>Что бот уточнит</h3>
+          <p>Ток, мощность, КПД, напряжение и число фаз, если они не найдены в паспортах.</p>
+          <p>Освещение, электрообогрев кровли и дренажей, шкафы ШУК, ЩУТ, ЩУГ и ШСС.</p>
+          <button id="answersButton" class="secondary-button wide">Все HITL-ответы</button>
+        </div>
+      </aside>
+    </section>
+  </main>
+
+  <main id="runView" class="view run-view hidden">
+    <section class="run-card">
+      <div class="run-orbit"><span></span><strong id="runPercent">45%</strong></div>
+      <p class="eyebrow">Полный расчёт проекта</p>
+      <h1 id="runStage">Запуск пайплайна</h1>
+      <p id="runPhrase">Всё в порядке, начинаю полный расчёт.</p>
+      <div class="run-progress"><span id="runProgressBar"></span></div>
+      <div class="run-steps">
+        <span>Схемы и паспорта</span><span>Расчёт нагрузок</span><span>Подбор защиты</span><span>RAG и Excel</span>
+      </div>
+      <small>Страница автоматически откроет сводку после фактического завершения пайплайна.</small>
+    </section>
+  </main>
+
+  <main id="resultsView" class="view results-view hidden">
+    <header class="workspace-header">
+      <div><p class="eyebrow">Результаты проекта</p><h1>Электроприёмники и аппараты защиты</h1><p class="subtitle">Полный список тегов с раскрывающимся shortlist по каждой позиции.</p></div>
+      <div class="header-actions">
+        <button id="sourceFilesResultButton" class="secondary-button">Исходные файлы</button>
+        <button id="answersResultButton" class="secondary-button">HITL-ответы</button>
+        <button id="rerunButton" class="secondary-button">Повторить расчёт</button>
+        <button id="downloadsButton" class="primary-button">Скачать результаты</button>
+        <button id="expandWarningsButton" class="secondary-button">Раскрыть замечания</button>
+        <button id="collapseAllButton" class="secondary-button">Свернуть все</button>
+      </div>
+    </header>
+    <section id="summary" class="summary-grid" aria-label="Сводные показатели"></section>
+    <section id="resultsToolbar" class="toolbar">
+      <div class="search-box"><span>⌕</span><input id="searchInput" placeholder="Поиск по тегу, названию или аппарату" /></div>
+      <select id="statusFilter"><option value="">Все статусы</option><option value="ready">Готово</option><option value="warning">С условиями</option><option value="needs_review">Нужна проверка</option><option value="missing">Нет кандидата</option></select>
+      <select id="classFilter"><option value="">Все классы ЭП</option></select>
+    </section>
+    <section id="equipmentList" class="equipment-list" aria-live="polite"></section>
+  </main>
+
+  <input id="fileInput" type="file" hidden />
+
+  <dialog id="sourceFilesDialog" class="management-dialog">
+    <div class="dialog-heading"><div><strong>Исходные файлы проекта</strong><span>Добавление, замена и удаление документов</span></div><button id="closeSourceFilesButton" class="icon-button">×</button></div>
+    <div class="scheme-upload-grid">
+      <button class="document-upload" data-category="schemes" data-document-type="ТМ" data-accept=".pdf">ТМ<small>Технологическая схема</small></button>
+      <button class="document-upload" data-category="schemes" data-document-type="ОВ" data-accept=".pdf">ОВ<small>Отопление и вентиляция</small></button>
+      <button class="document-upload" data-category="schemes" data-document-type="ГСВ" data-accept=".pdf">ГСВ<small>Газоснабжение</small></button>
+      <button class="document-upload" data-category="schemes" data-document-type="ЭО" data-accept=".pdf">ЭО<small>Электроосвещение</small></button>
+      <button class="document-upload" data-category="schemes" data-document-type="ХВО" data-accept=".pdf">ХВО<small>Водоподготовка</small></button>
+      <button class="document-upload" data-category="schemes" data-document-type="ДРУГОЕ" data-accept=".pdf" data-multiple="true">Другие схемы<small>Дополнительные разделы</small></button>
+    </div>
+    <div class="dialog-actions">
+      <button class="secondary-button upload-source-button" data-category="passports" data-accept=".pdf" data-multiple="true">Добавить паспорта ЭП</button>
+      <button class="secondary-button upload-source-button" data-category="template" data-accept=".xlsx">Заменить шаблон XLSX</button>
+      <button class="secondary-button upload-source-button" data-category="additional" data-accept=".pdf,.xlsx,.json,.csv" data-multiple="true">Дополнительные файлы</button>
+    </div>
+    <div id="sourceFilesList" class="management-list"></div>
+  </dialog>
+
+  <dialog id="answersDialog" class="management-dialog"><div class="dialog-heading"><div><strong>Human-in-the-loop</strong><span>Все вопросы, ответы и пропуски</span></div><button id="closeAnswersButton" class="icon-button">×</button></div><div id="answersList" class="management-list"></div></dialog>
+
+  <dialog id="answerEditDialog" class="editor-dialog"><form id="answerEditForm" method="dialog"><div class="dialog-heading"><div><strong id="answerEditTitle">Изменение ответа</strong><span id="answerEditSource"></span></div><button id="closeAnswerEditButton" type="button" class="icon-button">×</button></div><div class="editor-body"><p id="answerEditMessage"></p><div id="answerEditControl"></div><label class="comment-field">Комментарий<textarea id="answerEditComment" rows="2"></textarea></label><div class="editor-actions"><button id="resetAnswerButton" type="button" class="secondary-button">Сбросить ответ</button><button class="primary-button" type="submit">Сохранить</button></div></div></form></dialog>
+
+  <dialog id="downloadsDialog" class="downloads-dialog"><div class="dialog-heading"><div><strong>Файлы результата</strong><span>Названия адаптированы для инженера и коллег</span></div><button id="closeDownloadsButton" class="icon-button">×</button></div><div id="downloadsList" class="downloads-list"></div></dialog>
+
+  <dialog id="historyDialog" class="management-dialog"><div class="dialog-heading"><div><strong>Журнал диалога</strong><span>Загрузка файлов, HITL и этапы расчёта</span></div><button id="closeHistoryButton" class="icon-button">×</button></div><div id="historyList" class="history-list"></div></dialog>
+
+  <dialog id="shareDialog" class="share-dialog"><div class="dialog-heading"><div><strong>Поделиться запуском</strong><span>Каждый коллега получит отдельную изолированную сессию</span></div><button id="closeShareButton" class="icon-button">×</button></div><div class="editor-body"><label>Название приглашения<input id="shareLabel" value="Расчёт Boiler Elec AI" /></label><div class="two-columns"><label>Срок, часов<input id="shareHours" type="number" value="168" min="1" max="2160" /></label><label>Количество запусков<input id="shareUses" type="number" value="25" min="1" max="1000" /></label></div><label>Административный токен публикации (если настроен)<input id="shareAdminToken" type="password" autocomplete="off" /></label><button id="createShareButton" class="primary-button wide">Создать ссылку</button><div id="shareResult" class="share-result hidden"></div><p class="security-note">Ссылка является ключом доступа. Для интернета ноутбук должен быть опубликован через VPN, защищённый туннель или reverse proxy с HTTPS.</p></div></dialog>
+
+  <dialog id="inviteDialog" class="share-dialog"><div class="dialog-heading"><div><strong>Совместный запуск</strong><span id="inviteLabel">Вам открыли доступ к Boiler Elec AI</span></div></div><div class="editor-body"><p>Будет создан новый независимый проект. Файлы и ответы других пользователей не смешиваются с вашими.</p><button id="acceptInviteButton" class="primary-button wide">Создать свой расчёт</button><div id="inviteError" class="inline-error hidden"></div></div></dialog>
+
+  <template id="equipmentTemplate"><article class="equipment-card"><button class="equipment-head" type="button" aria-expanded="false"><div class="tag-block"><span class="tag"></span><span class="equipment-class"></span></div><div class="equipment-title"><strong class="display-name"></strong><span class="selected-model"></span></div><div class="metrics"><span class="nominal"></span><span class="candidate-count"></span></div><span class="status-badge"></span><span class="chevron">⌄</span></button><div class="equipment-body" hidden></div></article></template>
+  <script src="/static/app.js" defer></script>
+</body>
+</html>

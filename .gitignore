@@ -15,3 +15,18 @@ models/
 
 frontend/.next/
 frontend/node_modules/
+
+# Временные каталоги smoke и integration tests
+.tmp/
+
+# Результаты пользовательских и общих веб-сессий
+data/output/runs/project-*/
+data/output/runs/shared-*/
+data/output/runs/web-*/
+
+# Ручные HITL-ответы и служебные артефакты запусков
+data/output/runs/*/user_inputs.json
+data/output/runs/*/preflight.json
+data/output/runs/*/run_result.json
+data/output/runs/*/pipeline_error.log
+data/output/runs/*/previous_run_*.zip
