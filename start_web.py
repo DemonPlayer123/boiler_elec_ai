@@ -23,7 +23,6 @@ def main() -> None:
         description="Единый запуск Boiler Elec AI Web"
     )
     
-    parser = argparse.ArgumentParser(description="Единый запуск Boiler Elec AI Web")
     parser.add_argument("--host", default="0.0.0.0")
     parser.add_argument("--port", type=int, default=8000)
     parser.add_argument("--mode", choices=("auto", "real", "demo"), default=os.getenv("BOILER_ELEC_PIPELINE_MODE", "auto"))
